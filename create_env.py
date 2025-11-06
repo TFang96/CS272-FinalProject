@@ -16,7 +16,7 @@ def create_intersection_env():
     env = gymnasium.make('intersection-v1', render_mode='rgb_array')
     env.reset()
     return env
-
+'''
 def main():
     plt.imshow(create_highway_env().render())
     plt.show()
@@ -26,3 +26,4 @@ def main():
     plt.show()
 
 main()
+'''
