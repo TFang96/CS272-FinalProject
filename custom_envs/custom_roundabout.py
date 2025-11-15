@@ -235,7 +235,7 @@ class CustomRoundaboutEnv(AbstractEnv):
 
         # Pedestrians
         crossing_lanes = [
-            #("ses", "se", 0),
+            ("ses", "se", 0),
             ("sx", "sxs", 0),
             ("ees", "ee", 0),
             ("ex", "exs", 0),
@@ -246,7 +246,7 @@ class CustomRoundaboutEnv(AbstractEnv):
         ]
 
         for lane_idx in crossing_lanes:
-            if self.np_random.uniform() < 1:
+            if self.np_random.uniform() < 0.5:
                 self.spawn_pedestrian_crossing(lane_idx)
 
     def spawn_pedestrian_crossing(self, lane_index):
