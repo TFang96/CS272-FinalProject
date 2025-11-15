@@ -8,6 +8,23 @@ from highway_env.road.lane import CircularLane, LineType, SineLane, StraightLane
 from highway_env.road.road import Road, RoadNetwork
 from highway_env.vehicle.controller import MDPVehicle
 from highway_env.vehicle.behavior import IDMVehicle
+from highway_env.vehicle.objects import RoadObject
+
+class Pedestrian(RoadObject):
+    LENGTH = 1
+    WIDTH = 1
+
+    def __init__(self, road, position, heading, speed=1.4):
+        super().__init__(road, position, heading, speed)
+
+    def act(self, action=None):
+        pass
+
+    def step(self, dt):
+        vx = self.speed * np.cos(self.heading)
+        vy = self.speed * np.sin(self.heading)
+        self.position[0] += vx * dt
+        self.position[1] += vy * dt
 
 class AggressiveCar(IDMVehicle):
     LENGTH = 4
@@ -149,8 +166,8 @@ class CustomRoundaboutEnv(AbstractEnv):
         self.road = road
 
     def _make_vehicles(self) -> None:
-        position_deviation = 200.0
-        speed_deviation = 200.0
+        position_deviation = 2.0
+        speed_deviation = 2.0
 
         # Ego-vehicle
         ego_lane = self.road.network.get_lane(("ser","ses",0))
@@ -215,3 +232,39 @@ class CustomRoundaboutEnv(AbstractEnv):
             vehicle.plan_route_to(destination)
             vehicle.randomize_behavior()
             self.road.vehicles.append(vehicle)
+
+        # Pedestrians
+        crossing_lanes = [
+            #("ses", "se", 0),
+            ("sx", "sxs", 0),
+            ("ees", "ee", 0),
+            ("ex", "exs", 0),
+            ("nes", "ne", 0),
+            ("nx", "nxs", 0),
+            ("wes", "we", 0),
+            ("wx", "wxs", 0)
+        ]
+
+        for lane_idx in crossing_lanes:
+            if self.np_random.uniform() < 1:
+                self.spawn_pedestrian_crossing(lane_idx)
+
+    def spawn_pedestrian_crossing(self, lane_index):
+        lane = self.road.network.get_lane(lane_index)
+
+        long = lane.length / 2
+        lateral_offset = -lane.width / 2
+        pos = lane.position(long, lateral_offset)
+
+        lane_heading = lane.heading_at(long)
+
+        heading = lane_heading + np.pi/2
+
+        ped = Pedestrian(
+            road=self.road,
+            position=pos,
+            heading=heading,
+            speed=0.7
+        )
+
+        self.road.vehicles.append(ped)

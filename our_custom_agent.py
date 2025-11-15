@@ -26,6 +26,29 @@ env = gym.make(
         "offscreen_rendering": False
     }
 )
-env.reset()
-plt.imshow(env.render())
+#env.reset()
+#plt.imshow(env.render())
+#plt.show()
+
+import time
+
+obs, info = env.reset()
+
+plt.ion()  # turn on interactive mode
+fig, ax = plt.subplots()
+im = ax.imshow(env.render())  # initial frame
 plt.show()
+
+done = False
+while not done:
+    action = env.action_space.sample()
+    
+    obs, reward, terminated, truncated, info = env.step(action)
+    done = terminated or truncated
+    
+    im.set_data(env.render())
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+    time.sleep(1)  
+
+env.close()
