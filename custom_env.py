@@ -40,9 +40,8 @@ class RoundaboutYieldExitEnv(RoundaboutEnv):
                 continue
             if np.random.rand() < self.config["aggressive_fraction"]:
                 if isinstance(v, IDMVehicle):
-                    v.target_speed *= 1.2
-                    v.TIME_HEADWAY *= 0.7
-                    v.POLITENESS *= 0.5
+                    v.target_speed *= 2.0
+                    v.POLITENESS *= 0.2
 
     # ----- Reward shaping -----
     def _reward(self, action):
@@ -53,16 +52,13 @@ class RoundaboutYieldExitEnv(RoundaboutEnv):
             r += self.config["collision_reward"]
 
         # Approaching roundabout too fast
-        center = self.road.network.roundabout_center  # provided by RoundaboutEnv
-        dist = np.linalg.norm(ego.position - center)
-        if dist > self.config["approach_radius"] and self._on_approach_lane():
-            if self.vehicle.speed > self.config["approach_speed_limit"]:
-                r += self.config["approach_fast_penalty"]
+        if self._on_approach_lane() and self.vehicle.speed > self.config["approach_speed_limit"]:
+            r += self.config["approach_fast_penalty"]
 
         # Unsafe following: small time headway to the front vehicle in same lane
-        lead = self.vehicle.front_vehicle
+        lead = self.get_front_vehicle()
         if lead is not None:
-            gap = np.linalg.norm(lead.position - ego.position) - ego.LENGTH
+            gap = np.linalg.norm(lead.position - self.vehicle.position) - self.vehicle.LENGTH
             v = max(self.vehicle.speed, 1e-3)
             if (gap / v) < self.config["min_time_headway"]:
                 r += self.config["unsafe_dist_penalty"]
@@ -75,7 +71,7 @@ class RoundaboutYieldExitEnv(RoundaboutEnv):
 
     # ----- Termination/success -----
     def _is_terminal(self):
-        done = super()._is_terminal()
+        done = super()._is_terminated()
         if not self.vehicle.crashed and self._exited_via_target():
             self._succeeded = True
             done = True
@@ -100,3 +96,16 @@ class RoundaboutYieldExitEnv(RoundaboutEnv):
         except Exception:
             pass
         return False
+
+    def get_front_vehicle(self):
+        lane = self.vehicle.road.network.get_lane(self.vehicle.lane_index)
+        s_ego, _ = lane.local_coordinates(self.vehicle.position)
+        front, min_ds = None, float("inf")
+        for v in self.vehicle.road.vehicles:
+            if v is self.vehicle or getattr(v, "lane_index", None) != self.vehicle.lane_index:
+                continue
+            s_v, _ = lane.local_coordinates(v.position)
+            ds = s_v - s_ego
+            if ds > 0 and ds < min_ds:
+                front, min_ds = v, ds
+        return front
