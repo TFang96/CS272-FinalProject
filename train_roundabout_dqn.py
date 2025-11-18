@@ -3,8 +3,10 @@ import highway_env          # required for base highway-env functionality
 import register_envs        # this runs the register() above and adds your env to gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
+from matplotlib import pyplot as plt
 
-env = gym.make("roundabout-yield-exit-v0")
+
+env = gym.make("roundabout-yield-exit-v0", render_mode="rgb_array")
 env.unwrapped.config.update({
     "observation": {"type": "LidarObservation"},
     "action": {"type": "DiscreteMetaAction"},
@@ -13,6 +15,9 @@ env.unwrapped.config.update({
 })
 env.reset()
 env = Monitor(env)
+
+plt.imshow(env.render())
+plt.show()
 
 model = DQN(
     "MlpPolicy", env,
@@ -27,5 +32,5 @@ model = DQN(
     target_update_interval=500,
     verbose=1,
 )
-model.learn(total_timesteps=200_000)
+model.learn(total_timesteps=10000)
 model.save("models/dqn_roundabout_lidar")
