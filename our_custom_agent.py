@@ -1,63 +1,97 @@
 import register_envs
 import gymnasium as gym
 import matplotlib.pyplot as plt
-from stable_baselines3 import DQN
-
+from stable_baselines3 import PPO
+import time
+import highway_env
 
 env = gym.make(
-    "custom-roundabout-v0",  
+    "custom-roundabout-v0",
     render_mode="rgb_array",
     config={
         "observation": {
-        "type": "TimeToCollision"
+            "type": "TimeToCollision"
         },
         "action": {
             "type": "DiscreteMetaAction"
         },
-        "incoming_vehicle_destination": None,
-        "duration": 11, # [s] If the environment runs for 11 seconds and still hasn't done(vehicle is crashed), it will be truncated. "Second" is expressed as the variable "time", equal to "the number of calls to the step method" / policy_frequency.
-        "simulation_frequency": 15,  # [Hz]
-        "policy_frequency": 1,  # [Hz]
+        # ... (other config parameters) ...
+        "duration": 11,
+        "simulation_frequency": 15,
+        "policy_frequency": 1,
         "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
-        "screen_width": 600,  # [px] width of the pygame window
-        "screen_height": 1000,  # [px] height of the pygame window
-        "centering_position": [0.5, 0.6],  # The smaller the value, the more southeast the displayed area is. K key and M key can change centering_position[0].
+        "screen_width": 600,
+        "screen_height": 1000,
+        "centering_position": [0.5, 0.6],
         "scaling": 5.5,
         "show_trajectories": False,
         "render_agent": True,
         "offscreen_rendering": False
     }
 )
-#env.reset()
-#plt.imshow(env.render())
-#plt.show()
 
-import time
+SIM_FREQ = env.unwrapped.config["simulation_frequency"]
+PAUSE_TIME = 1 / SIM_FREQ 
 
-obs, info = env.reset()
+model_path = "ppo_roundabout_model.zip" 
 
-plt.ion()  # turn on interactive mode
-fig, ax = plt.subplots()
-im = ax.imshow(env.render())  # initial frame
-plt.show()
+print(f"Loading PPO model from: {model_path}")
 
-model = DQN(
-        "MlpPolicy",
-        env,
-        verbose=0,
-        learning_rate=1e-3, # Use a reasonable learning rate
-    )
 
-done = False
-while not done:
-    action = env.action_space.sample()
+model = PPO.load(
+    model_path, 
+    env=env, 
+    device="cuda"  
+)
+
+print("PPO model loaded successfully!")
+
+
+
+def visualize_agent_performance_on_input(model, env, num_episodes=3):
+    """Runs and displays multiple episodes of the trained agent, waiting for user input between episodes."""
+
+    plt.ion() 
     
-    obs, reward, terminated, truncated, info = env.step(action)
-    done = terminated or truncated
-    
-    im.set_data(env.render())
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-    time.sleep(1)  
+    for episode in range(num_episodes):
+        
+        if episode > 0:
+            input("Press Enter to start the next episode...") 
+            
+        print(f"\n--- Running Episode {episode + 1}/{num_episodes} ---")
+        
+        obs, info = env.reset()
+        
+        fig, ax = plt.subplots()
+        im = ax.imshow(env.render())
+        ax.set_title(f"Episode {episode + 1}")
+        plt.show()
 
+        done = False
+        step_count = 0
+        total_reward = 0
+        
+        while not done:
+            action, _ = model.predict(obs, deterministic=True)
+            
+            obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
+            total_reward += reward
+            step_count += 1
+            
+            im.set_data(env.render())
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+            
+            time.sleep(PAUSE_TIME)
+            
+        print(f"Episode finished after {step_count} steps. Total Reward: {total_reward:.2f}")
+
+
+        time.sleep(1) 
+        plt.close(fig) 
+
+    plt.ioff() 
+
+visualize_agent_performance_on_input(model, env, num_episodes=20)
 env.close()
