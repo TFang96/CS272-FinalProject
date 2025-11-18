@@ -3,6 +3,7 @@ import gymnasium
 import highway_env
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.evaluation import evaluate_policy
 
 
 def create_env():
@@ -39,6 +40,37 @@ def test_api_compliance(env):
     except Exception as e:
         print(f"check_env failed: {e}")
         raise
+
+def test_learnability(env, total_timesteps=10000):
+    print(f"\n--- Starting Learnability Test ({total_timesteps} timesteps) ---")
+    
+    model = DQN(
+        "MlpPolicy",
+        env,
+        verbose=0,
+        learning_rate=1e-3, # Use a reasonable learning rate
+    )
+
+    print("Training DQN model...")
+    model.learn(total_timesteps=total_timesteps)
+
+    print("Evaluating trained policy...")
+    mean_reward, std_reward = evaluate_policy(
+        model,
+        model.get_env(), # Use the vectorized environment from the model
+        n_eval_episodes=10,
+        render=False
+    )
+
+    print(f"\nEvaluation Results:")
+    print(f"Mean Reward: {mean_reward:.2f}")
+    print(f"Std Dev Reward: {std_reward:.2f}")
+
+    if mean_reward > 0.0: # Check if the agent performs significantly better than a random agent (which might get around 0 or slightly negative)
+        print("Learnable")
+    else:
+        print("Unlearnable")
+
 if __name__ == "__main__":
     
     print(f"Starting test for custom environment")
@@ -49,6 +81,7 @@ if __name__ == "__main__":
 
         test_api_compliance(env)
 
+        test_learnability(env, total_timesteps=10000)
 
     except Exception as e:
         print(f"\ERROR: One or more tests failed: {e}")

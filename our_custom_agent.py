@@ -1,6 +1,8 @@
 import register_envs
 import gymnasium as gym
 import matplotlib.pyplot as plt
+from stable_baselines3 import DQN
+
 
 env = gym.make(
     "custom-roundabout-v0",  
@@ -38,6 +40,13 @@ plt.ion()  # turn on interactive mode
 fig, ax = plt.subplots()
 im = ax.imshow(env.render())  # initial frame
 plt.show()
+
+model = DQN(
+        "MlpPolicy",
+        env,
+        verbose=0,
+        learning_rate=1e-3, # Use a reasonable learning rate
+    )
 
 done = False
 while not done:
