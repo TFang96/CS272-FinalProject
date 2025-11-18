@@ -1,7 +1,7 @@
 import register_envs
 import gymnasium as gym
 import matplotlib.pyplot as plt
-from stable_baselines3 import PPO
+from stable_baselines3 import DQN
 import time
 import highway_env
 
@@ -38,15 +38,15 @@ model_path = "ppo_roundabout_model.zip"
 print(f"Loading PPO model from: {model_path}")
 
 
-model = PPO.load(
-    model_path, 
-    env=env, 
-    device="cuda"  
+model = DQN.load(
+    "dqn_roundabout_model.zip",
+    env=env,
+    device="cuda",
+    buffer_size=100000 
 )
 
-print("PPO model loaded successfully!")
-
-
+print("DQN model loaded successfully!")
+model.load_replay_buffer("dqn_roundabout_buffer.pkl")
 
 def visualize_agent_performance_on_input(model, env, num_episodes=3):
     """Runs and displays multiple episodes of the trained agent, waiting for user input between episodes."""
