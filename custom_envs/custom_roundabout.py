@@ -203,10 +203,12 @@ class CustomRoundaboutEnv(AbstractEnv):
 
         # Incoming vehicles
         destinations = ["exr", "sxr", "nxr"]
-        vehicle_types = [AggressiveCar, Truck, Motorcycle]
+        #vehicle_types = [AggressiveCar, Truck, Motorcycle]
+        vehicle_types = [AggressiveCar, Motorcycle]
 
-        # spacing positions for 3 cars
-        indices = [-1, 0, 1]    
+        # spacing positions for the cars
+        #indices = [-1, 0, 1]  
+        indices = [-1, 1]  
 
         for i, VehicleClass in zip(indices, vehicle_types):
             longitudinal = 20.0 * float(i) + self.np_random.normal() * position_deviation
@@ -230,10 +232,12 @@ class CustomRoundaboutEnv(AbstractEnv):
 
         # Other vehicles
         destinations = ["exr", "sxr", "nxr"]
-        vehicle_types = [AggressiveCar, Truck, Motorcycle]
+        #vehicle_types = [AggressiveCar, Truck, Motorcycle]
+        vehicle_types = [AggressiveCar, Truck]
 
-        # spacing positions for 3 cars
-        indices = [-1, 0, 1]    
+        # spacing positions for the cars
+        #indices = [-1, 0, 1]    
+        indices = [-1, 0]
 
         for i, VehicleClass in zip(indices, vehicle_types):
             longitudinal = 20.0 * float(i) + self.np_random.normal() * position_deviation
