@@ -57,7 +57,6 @@ class CustomRoundaboutEnv(AbstractEnv):
             {
                 "observation": {
                     "type": "Kinematics",
-                    "absolute": True,
                     "features_range": {
                         "x": [-100, 100],
                         "y": [-100, 100],
@@ -65,10 +64,12 @@ class CustomRoundaboutEnv(AbstractEnv):
                         "vy": [-15, 15],
                     },
                 },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 8, 16]},
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
                 "collision_reward": -1,
-                "high_speed_reward": 0.2,
+                "high_speed_reward": 0.3,
+                "progress_reward": 0.1,
+                "pedestrian_proximity_reward": -0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
@@ -95,10 +96,31 @@ class CustomRoundaboutEnv(AbstractEnv):
         return reward
 
     def _rewards(self, action: int) -> dict[str, float]:
+        
+        current_lane = self.road.network.get_lane(self.vehicle.lane_index)
+        
+        longitudinal, _ = current_lane.local_coordinates(self.vehicle.position)
+        
+   
+        
+        progress_reward_value = longitudinal / 100.0 
+
+        pedestrian_near_penalty = 0
+        PEDESTRIAN_SAFE_DISTANCE = 5.0
+        
+        for v in self.road.vehicles:
+            if isinstance(v, Pedestrian):
+                distance = np.linalg.norm(self.vehicle.position - v.position)
+                
+                if distance < PEDESTRIAN_SAFE_DISTANCE:
+                    pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
+                    
         return {
             "collision_reward": self.vehicle.crashed,
             "high_speed_reward": MDPVehicle.get_speed_index(self.vehicle)
             / (MDPVehicle.DEFAULT_TARGET_SPEEDS.size - 1),
+            "progress_reward": progress_reward_value,
+            "pedestrian_proximity_reward": -pedestrian_near_penalty, 
             "lane_change_reward": action in [0, 2],
             "on_road_reward": self.vehicle.on_road,
         }

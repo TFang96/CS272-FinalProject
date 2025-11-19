@@ -1,21 +1,30 @@
 import register_envs
 import gymnasium as gym
 import matplotlib.pyplot as plt
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO
 import time
 import highway_env
 
 env = gym.make(
-    "custom-roundabout-v0",
-    render_mode="rgb_array",
-    config={
+        'custom-roundabout-v0',
+        render_mode='rgb_array',
+        config={
         "observation": {
-            "type": "TimeToCollision"
+            "type": "Kinematics"
         },
+        
         "action": {
-            "type": "DiscreteMetaAction"
+            "type": "DiscreteMetaAction",
+            "target_speeds": [0, 5, 10, 15, 20] # Must match training config
         },
-        # ... (other config parameters) ...
+        
+        "collision_reward": -5,
+        "high_speed_reward": 0.3,
+        "progress_reward": 0.5,
+        "time_penalty": -0.05,
+        "normalize_reward": False,
+
+        "incoming_vehicle_destination": None,
         "duration": 11,
         "simulation_frequency": 15,
         "policy_frequency": 1,
@@ -27,26 +36,21 @@ env = gym.make(
         "show_trajectories": False,
         "render_agent": True,
         "offscreen_rendering": False
-    }
-)
+        }
+    )
 
 SIM_FREQ = env.unwrapped.config["simulation_frequency"]
 PAUSE_TIME = 1 / SIM_FREQ 
 
-model_path = "ppo_roundabout_model.zip" 
-
-print(f"Loading PPO model from: {model_path}")
 
 
-model = DQN.load(
-    "dqn_roundabout_model.zip",
+model = PPO.load(
+    "ppo_custom_roundabout_model_1.zip",
     env=env,
     device="cuda",
-    buffer_size=100000 
 )
 
-print("DQN model loaded successfully!")
-model.load_replay_buffer("dqn_roundabout_buffer.pkl")
+print("PPO model loaded successfully!")
 
 def visualize_agent_performance_on_input(model, env, num_episodes=3):
     """Runs and displays multiple episodes of the trained agent, waiting for user input between episodes."""

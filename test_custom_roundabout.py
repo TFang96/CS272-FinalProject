@@ -1,37 +1,50 @@
 import register_envs
-import gymnasium
-import highway_env
+import gymnasium as gym
 import numpy as np
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO 
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.evaluation import evaluate_policy
-
+import highway_env
+modelFile = "ppo_custom_roundabout_model_1.zip" 
 
 def create_env():
-    env = gymnasium.make(
-    'custom-roundabout-v0',
-    render_mode='rgb_array',
-    config={
-    "observation": {
-        "type": "TimeToCollision"
-    },
-    "action": {
-        "type": "DiscreteMetaAction"
-    },
-    "incoming_vehicle_destination": None,
-    "duration": 11, # [s] If the environment runs for 11 seconds and still hasn't done(vehicle is crashed), it will be truncated. "Second" is expressed as the variable "time", equal to "the number of calls to the step method" / policy_frequency.
-    "simulation_frequency": 15,  # [Hz]
-    "policy_frequency": 1,  # [Hz]
-    "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
-    "screen_width": 600,  # [px] width of the pygame window
-    "screen_height": 1000,  # [px] height of the pygame window
-    "centering_position": [0.5, 0.6],  # The smaller the value, the more southeast the displayed area is. K key and M key can change centering_position[0].
-    "scaling": 5.5,
-    "show_trajectories": False,
-    "render_agent": True,
-    "offscreen_rendering": False
-    }
-)
+    """
+    Creates and configures the custom roundabout environment.
+    NOTE: The config MUST match the one used during training in train_ppo.py.
+    """
+    env = gym.make(
+        'custom-roundabout-v0',
+        render_mode='rgb_array',
+        config={
+        "observation": {
+            "type": "Kinematics"
+        },
+        
+        "action": {
+            "type": "DiscreteMetaAction",
+            "target_speeds": [0, 5, 10, 15, 20] 
+        },
+        
+        "collision_reward": -5,
+        "high_speed_reward": 0.3,
+        "progress_reward": 0.5,
+        "time_penalty": -0.05,
+        "normalize_reward": False,
+
+        "incoming_vehicle_destination": None,
+        "duration": 11,
+        "simulation_frequency": 15,
+        "policy_frequency": 1,
+        "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
+        "screen_width": 600,
+        "screen_height": 1000,
+        "centering_position": [0.5, 0.6],
+        "scaling": 5.5,
+        "show_trajectories": False,
+        "render_agent": True,
+        "offscreen_rendering": False
+        }
+    )
     return env
 
 def test_api_compliance(env):
@@ -42,41 +55,43 @@ def test_api_compliance(env):
         print(f"check_env failed: {e}")
         raise
 
-def test_learnability(env, total_timesteps=10000):
-    print(f"\n--- Starting Learnability Test ({total_timesteps} timesteps) ---")
+def test_learnability(env, total_timesteps=1):
+    print(f"\n--- Starting Learnability Test ---")
     
-    random_mean_reward, random_std_reward = evaluate_random_policy(env, n_eval_episodes=10)
+    random_mean_reward, random_std_reward = evaluate_random_policy(env, n_eval_episodes=100)
     print(f"Random Policy Mean Reward: {random_mean_reward:.2f} +/- {random_std_reward:.2f}")
 
-    model = DQN(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        learning_rate=1e-3, # Use a reasonable learning rate
-        device="cuda"
-    )
+    try:
+        # PPO MODEL LOADING
+        model = PPO.load( 
+            modelFile,
+            env=env,
+            device="cuda"
+        )
 
-    print("Training DQN model...")
-    model.learn(total_timesteps=total_timesteps)
+        print("PPO model loaded successfully!")
 
-    print("\nEvaluating Trained DQN Policy...")
-    mean_reward, std_reward = evaluate_policy(
-        model,
-        model.get_env(), 
-        n_eval_episodes=10,
-        render=False
-    )
+        print("\nEvaluating Trained PPO Policy...")
+        mean_reward, std_reward = evaluate_policy(
+            model,
+            model.get_env(), 
+            n_eval_episodes=100,
+            render=False
+        )
 
-    print(f"\nEvaluation Results:")
-    print(f"Trained Policy Mean Reward: {mean_reward:.2f} +/- {std_reward:.2f}")
-    
-    # Comparison for 'Learnable' status
-    if mean_reward > random_mean_reward: 
-        print("Learnable: Trained agent performs better than random.")
-    else:
-        print("Unlearnable: Trained agent does not significantly outperform random.")
-
-def evaluate_random_policy(env, n_eval_episodes=10, render=False):
+        print(f"\nEvaluation Results:")
+        print(f"Trained Policy Mean Reward: {mean_reward:.2f} +/- {std_reward:.2f}")
+        
+        # Comparison for 'Learnable' status
+        if mean_reward > random_mean_reward: 
+            print("Learnable: Trained agent performs better than random")
+        else:
+            print("Unlearnable: Trained agent does not significantly outperform random.")
+            
+    except Exception as e:
+        print(f"Could not load or evaluate model: {e}")
+        
+def evaluate_random_policy(env, n_eval_episodes=100, render=False):
     """
     Evaluates a random agent over n_eval_episodes.
     Returns the mean reward and standard deviation.
@@ -84,22 +99,20 @@ def evaluate_random_policy(env, n_eval_episodes=10, render=False):
     print("Evaluating Random Policy...")
     all_episode_rewards = []
     
-    # Run evaluation for the specified number of episodes
     for episode in range(n_eval_episodes):
-        obs, info = env.reset()
-        done = False
+        # Must reset the environment after each episode
+        obs, info = env.reset() 
+        terminated = False
+        truncated = False
         episode_reward = 0
         
-        while not done:
+        while not terminated and not truncated:
             # 1. Choose a random action
             action = env.action_space.sample()
             
-            # 2. Step the environment
             obs, reward, terminated, truncated, info = env.step(action)
-            done = terminated or truncated
             episode_reward += reward
             
-            # 3. Optional rendering
             if render:
                 env.render()
         
@@ -120,7 +133,7 @@ if __name__ == "__main__":
 
         test_api_compliance(env)
 
-        test_learnability(env, total_timesteps=1)
+        test_learnability(env, total_timesteps=1) 
 
     except Exception as e:
         print(f"\ERROR: One or more tests failed: {e}")
