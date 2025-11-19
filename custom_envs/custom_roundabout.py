@@ -75,7 +75,7 @@ class CustomRoundaboutEnv(AbstractEnv):
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 11,
+                "duration": 20,
                 "normalize_reward": True,
             }
         )
