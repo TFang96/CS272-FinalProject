@@ -257,7 +257,7 @@ class CustomRoundaboutEnv(AbstractEnv):
 
         # Pedestrians
         crossing_lanes = [
-            ("ses", "se", 0),
+            #("ses", "se", 0),
             ("sx", "sxs", 0),
             ("ees", "ee", 0),
             ("ex", "exs", 0),
