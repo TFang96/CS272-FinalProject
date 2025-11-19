@@ -308,11 +308,18 @@ class CustomRoundaboutEnv(AbstractEnv):
             for lane in lanes:
                 for s in spec.get("s", []):
                     x, y = lane.position(s, 0.0)
-                    self.road.objects.append(
-                        Obstacle(self.road, position=np.array([x, y]),
-                                 heading=lane.heading_at(s),
-                                 length=L, width=W)
-                    )
+                    obj = Obstacle(self.road, position=np.array([x, y]),
+                                   heading=lane.heading_at(s))
+                    # set size after construction (handles different highway-env versions)
+                    if hasattr(obj, "LENGTH"):
+                        obj.LENGTH = L
+                    elif hasattr(obj, "length"):
+                        obj.length = L
+                    if hasattr(obj, "WIDTH"):
+                        obj.WIDTH = W
+                    elif hasattr(obj, "width"):
+                        obj.width = W
+                    self.road.objects.append(obj)
 
     def _select_lanes(self, which):
         lanes = []
