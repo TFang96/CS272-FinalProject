@@ -42,7 +42,9 @@ def create_env():
 
 # Create the environment instance
 env = create_env()
-
+env.unwrapped.config.update({
+    "obstacles": [{"lane_filter":"approach", "s":[60,100,140], "size":(5.0,2.0)}]
+})
 
 model = PPO(
     "MlpPolicy",

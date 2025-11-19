@@ -9,6 +9,7 @@ from highway_env.road.road import Road, RoadNetwork
 from highway_env.vehicle.controller import MDPVehicle
 from highway_env.vehicle.behavior import IDMVehicle
 from highway_env.vehicle.objects import RoadObject
+from highway_env.vehicle.objects import Obstacle
 
 class Pedestrian(RoadObject):
     LENGTH = 1
@@ -64,6 +65,9 @@ class CustomRoundaboutEnv(AbstractEnv):
                         "vy": [-15, 15],
                     },
                 },
+                "obstacles": [
+                    {"lane_filter": "approach", "s": [60, 110], "size": (5.0, 2.0)}
+                ],
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
                 "collision_reward": -1,
@@ -134,6 +138,7 @@ class CustomRoundaboutEnv(AbstractEnv):
     def _reset(self) -> None:
         self._make_road()
         self._make_vehicles()
+        self._place_obstacles()
 
     def _make_road(self) -> None:
         center = [0, 0]
@@ -294,3 +299,30 @@ class CustomRoundaboutEnv(AbstractEnv):
         )
 
         self.road.vehicles.append(ped)
+
+    def _place_obstacles(self):
+        specs = self.config.get("obstacles", [])
+        for spec in specs:
+            lanes = self._select_lanes(spec.get("lane_filter", "approach"))
+            L, W = spec.get("size", (5.0, 2.0))
+            for lane in lanes:
+                for s in spec.get("s", []):
+                    x, y = lane.position(s, 0.0)
+                    self.road.objects.append(
+                        Obstacle(self.road, position=np.array([x, y]),
+                                 heading=lane.heading_at(s),
+                                 length=L, width=W)
+                    )
+
+    def _select_lanes(self, which):
+        lanes = []
+        for out in self.road.network.graph.values():
+            for lane_list in out.values():
+                for lane in lane_list:
+                    # Approaches vs ring (CircularLane has radius/center)
+                    if which == "ring" and hasattr(lane, "radius"):
+                        lanes.append(lane)
+                    elif which == "approach" and not hasattr(lane, "radius"):
+                        # your feeders are StraightLane/SineLane → treat as approaches
+                        lanes.append(lane)
+        return lanes
