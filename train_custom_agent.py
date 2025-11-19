@@ -64,7 +64,7 @@ model = PPO(
 print("Starting PPO training...")
 
 
-TOTAL_TIMESTEPS = 400000 
+TOTAL_TIMESTEPS = 500000 
 model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=4)
 
 # Save the trained model

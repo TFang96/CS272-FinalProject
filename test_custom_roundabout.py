@@ -32,7 +32,7 @@ def create_env():
         "normalize_reward": False,
 
         "incoming_vehicle_destination": None,
-        "duration": 11,
+        "duration": 20,
         "simulation_frequency": 15,
         "policy_frequency": 1,
         "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
