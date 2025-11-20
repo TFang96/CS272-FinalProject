@@ -347,7 +347,7 @@ class CustomRoundaboutEnv(AbstractEnv):
             road=self.road,
             position=pos,
             heading=heading,
-            speed=0.7
+            speed=0.35
         )
 
         self.road.vehicles.append(ped)
