@@ -20,7 +20,9 @@ Takes an existing trained data set, and continues training it with more timestep
 ## our_custom_agent.py: 
 Visually runs a trained agent against the environment over 20 episodes. Loads a trained model from a given file name
 - Loads a model from a specified file name
-random_agent.py: Runs a random choice agent against the environemnt over 20 episodes.
+
+## random_agent.py: 
+Runs a random choice agent against the environemnt over 20 episodes.
 
 ## roundabout.py: 
 Runs a random choice agent against the original base roundabout env given in highway-env
