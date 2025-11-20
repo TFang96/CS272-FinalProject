@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
+from typing import Tuple, Dict, Any
+from gymnasium.core import ObsType, ActType
 
 from highway_env import utils
 from highway_env.envs.common.abstract import AbstractEnv
@@ -66,8 +68,8 @@ class CustomRoundaboutEnv(AbstractEnv):
                 },
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -1,
-                "high_speed_reward": 0.3,
+                "collision_reward": -3,
+                "high_speed_reward": 0.2,
                 "progress_reward": 0.1,
                 "pedestrian_proximity_reward": -0.05,
                 "right_lane_reward": 0,
@@ -75,12 +77,28 @@ class CustomRoundaboutEnv(AbstractEnv):
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 20,
-                "normalize_reward": True,
+                "duration": 15,
+                "normalize_reward": False,
             }
         )
         return config
 
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, Dict[str, Any]]:
+        """
+        Execute one step of the environment's dynamics, including vehicle simulation
+        and dynamic pedestrian spawning.
+        """
+        obs, reward, terminated, truncated, info = super().step(action)
+        
+        # Increment step count
+        self.step_count += 1
+        
+        # Attempt to spawn a pedestrian at random times, only after the 3rd step
+        if self.step_count >= 3:
+            self._maybe_spawn_pedestrian()
+        
+        return obs, reward, terminated, truncated, info
+    
     def _reward(self, action: int) -> float:
         rewards = self._rewards(action)
         reward = sum(
@@ -132,6 +150,7 @@ class CustomRoundaboutEnv(AbstractEnv):
         return self.time >= self.config["duration"]
 
     def _reset(self) -> None:
+        self.step_count = 0
         self._make_road()
         self._make_vehicles()
 
@@ -188,91 +207,129 @@ class CustomRoundaboutEnv(AbstractEnv):
         self.road = road
 
     def _make_vehicles(self) -> None:
-        position_deviation = 2.0
-        speed_deviation = 2.0
+        # speed_deviation = 1.0
 
         # Ego-vehicle
         ego_lane = self.road.network.get_lane(("ser","ses",0))
         ego_vehicle = self.action_type.vehicle_class(self.road, ego_lane.position(125.0,0.0), speed=8.0, heading=ego_lane.heading_at(140.0))
         try:
-            ego_vehicle.plan_route_to("nxs")
+            ego_vehicle.plan_route_to("wxs") 
         except AttributeError:
             pass
         self.road.vehicles.append(ego_vehicle)
         self.vehicle = ego_vehicle
 
-        # Incoming vehicles
-        destinations = ["exr", "sxr", "nxr"]
-        #vehicle_types = [AggressiveCar, Truck, Motorcycle]
-        vehicle_types = [AggressiveCar, Motorcycle]
-
-        # spacing positions for the cars
-        #indices = [-1, 0, 1]  
-        indices = [-1, 1]  
-
-        for i, VehicleClass in zip(indices, vehicle_types):
-            longitudinal = 20.0 * float(i) + self.np_random.normal() * position_deviation
-
-            vehicle = VehicleClass.make_on_lane(
-                self.road,
-                ("we", "sx", 1),
-                longitudinal=longitudinal,
-                speed=16.0 + self.np_random.normal() * speed_deviation,
-            )
-
-            # assign route
-            if self.config["incoming_vehicle_destination"] is not None:
-                destination = destinations[self.config["incoming_vehicle_destination"]]
-            else:
-                destination = self.np_random.choice(destinations)
-
-            vehicle.plan_route_to(destination)
-            vehicle.randomize_behavior()
-            self.road.vehicles.append(vehicle)
-
-        # Other vehicles
-        destinations = ["exr", "sxr", "nxr"]
-        #vehicle_types = [AggressiveCar, Truck, Motorcycle]
-        vehicle_types = [AggressiveCar, Truck]
-
-        # spacing positions for the cars
-        #indices = [-1, 0, 1]    
-        indices = [-1, 0]
-
-        for i, VehicleClass in zip(indices, vehicle_types):
-            longitudinal = 20.0 * float(i) + self.np_random.normal() * position_deviation
-
-            vehicle = VehicleClass.make_on_lane(
-                self.road,
-                ("we", "sx", 0),
-                longitudinal=longitudinal,
-                speed=16.0 + self.np_random.normal() * speed_deviation,
-            )
-
-            # assign route
-            if self.config["incoming_vehicle_destination"] is not None:
-                destination = destinations[self.config["incoming_vehicle_destination"]]
-            else:
-                destination = self.np_random.choice(destinations)
-
-            vehicle.plan_route_to(destination)
-            vehicle.randomize_behavior()
-            self.road.vehicles.append(vehicle)
-
-        # Pedestrians
-        crossing_lanes = [
-            #("ses", "se", 0),
-            ("sx", "sxs", 0),
-            ("ees", "ee", 0),
-            ("ex", "exs", 0),
-            ("nes", "ne", 0),
-            ("nx", "nxs", 0),
-            ("wes", "we", 0),
-            ("wx", "wxs", 0)
+        # Other Vehicles: Spawn traffic directly onto the outer circular lane (lane 1)
+        
+        roundabout_lanes = [
+            ("ex", "ee", 1), 
+            ("nx", "ne", 1), 
+            ("wx", "we", 1), 
+            ("sx", "se", 1), 
         ]
 
-        for lane_idx in crossing_lanes:
-            if self.np_random.uniform() < 0.5:
+        vehicle_pool = [AggressiveCar, Truck, Motorcycle]
+        
+        # buffer to keep vehicles off the immediate entry/exit transition points.
+        BUFFER = 4.0 
+
+        # Iterate over the roundabout segments to populate the environment
+        for lane_index in roundabout_lanes:
+            lane = self.road.network.get_lane(lane_index)
+            
+            VehicleClass = self.np_random.choice(vehicle_pool)
+
+            positions = []
+            
+            if VehicleClass is Truck:
+                # Trucks are limited to 1 and are spawned in the center of their segment.
+                positions.append(lane.length / 2.0)
+            else:
+                # Spawn 1 or 2 cars/motorcycles. 2 with 75% probability
+                num_vehicles = self.np_random.choice([1, 2], p=[0.25, 0.75])
+                
+                # Calculate the usable section of the lane accounting for the buffer
+                usable_length = lane.length - 2 * BUFFER
+                
+                # Minimum separation required for two vehicles so they dont spawn on top of each other
+                MIN_SAFE_SEPARATION = 8.0 
+                
+                if num_vehicles == 1 or usable_length < MIN_SAFE_SEPARATION:
+                    # Single vehicle will be centered
+                    positions.append(lane.length / 2.0)
+                elif num_vehicles == 2:
+                    # Two vehicles: placed near start/end of the usable area, using relative placement for guaranteed spacing.
+                    
+                    # Position 1 = BUFFER + (25% of usable length)
+                    pos_start = BUFFER + usable_length * 0.25
+                    # Position 2 = BUFFER + (75% of usable length)
+                    pos_end = BUFFER + usable_length * 0.75
+                    
+                    positions.append(pos_start)
+                    positions.append(pos_end)
+                        
+            # Spawn vehicles
+            for longitudinal in positions:
+                vehicle = VehicleClass.make_on_lane(
+                    self.road,
+                    lane_index,
+                    longitudinal=longitudinal,
+                    # speed=15.0 + self.np_random.normal() * speed_deviation
+                    speed=15.0 # constant speed to avoid collisions
+                )
+
+                #Choose random exit for vehicles
+                # destinations = ["wxr", "exr", "sxr", "nxr"]
+
+                #Other vehicles do not exit at the same exit as ego vehicle
+                #This is done to avoid other vehicles from crashing into the pedestrian
+                destinations = ["exr", "sxr", "nxr"]
+
+                destination = self.np_random.choice(destinations)
+                vehicle.plan_route_to(destination)
+
+
+                vehicle.randomize_behavior()
+                self.road.vehicles.append(vehicle)
+
+
+    def _maybe_spawn_pedestrian(self) -> None:
+        
+        # Probability of spawning a pedestrian on any given step - 25% chance
+        SPAWN_PROBABILITY = 0.25
+        
+        # List of all crossing lanes (between approach/exit roads and the roundabout itself)
+        crossing_lanes = [
+            # ("ses", "se", 0), 
+            # ("sx", "sxs", 0), 
+            # ("ees", "ee", 0), 
+            # ("ex", "exs", 0), 
+            # ("nes", "ne", 0), 
+            # ("nx", "nxs", 0), 
+            # ("wes", "we", 0), 
+            ("wx", "wxs", 0)  #Only spawns in the exit that the ego vehicle goes to, to avoid other veghicles crashing
+        ]
+        
+        if self.np_random.uniform() < SPAWN_PROBABILITY:
+            # Randomly select a crossing lane
+            random_index = self.np_random.choice(len(crossing_lanes))
+            lane_idx = crossing_lanes[random_index]
+            
+            # Check if the spawn point is clear of existing pedestrians
+            lane = self.road.network.get_lane(lane_idx)
+            long = lane.length / 2
+            # Calculate position at the crossing center
+            pos = lane.position(long, -lane.width / 2) 
+            
+            is_clear = True
+            for v in self.road.vehicles:
+                if isinstance(v, Pedestrian):
+                    distance = np.linalg.norm(pos - v.position)
+                    if distance < 10.0:
+                        is_clear = False
+                        break
+                        
+            if is_clear:
                 self.spawn_pedestrian_crossing(lane_idx)
 
     def spawn_pedestrian_crossing(self, lane_index):

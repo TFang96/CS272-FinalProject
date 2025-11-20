@@ -9,33 +9,28 @@ def create_env():
         "custom-roundabout-v0",
         render_mode="rgb_array",
         config={
-     
             "observation": {
-                "type": "Kinematics",
-            },
-            
-            "action": {
-                "type": "DiscreteMetaAction",
-                "target_speeds": [0, 5, 10, 15, 20]
-            },
-            
-            "collision_reward": -5,         # Harsh penalty for crashes
-            "high_speed_reward": 0.3,       # Strong incentive for speed
-            "progress_reward": 0.5,        
-            "time_penalty": -0.05,         
-            
-            "duration": 11,
-            "simulation_frequency": 15,
-            "policy_frequency": 1,
-            "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
-            "screen_width": 600,
-            "screen_height": 1000,
-            "centering_position": [0.5, 0.6],
-            "scaling": 5.5,
-            "show_trajectories": False,
-            "render_agent": True,
-            "offscreen_rendering": False,
-            "normalize_reward": False, 
+                    "type": "Kinematics",
+                    "features_range": {
+                        "x": [-100, 100],
+                        "y": [-100, 100],
+                        "vx": [-15, 15],
+                        "vy": [-15, 15],
+                    },
+                },
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
+                "incoming_vehicle_destination": None,
+                "collision_reward": -3,
+                "high_speed_reward": 0.2,
+                "progress_reward": 0.1,
+                "pedestrian_proximity_reward": -0.05,
+                "right_lane_reward": 0,
+                "lane_change_reward": -0.05,
+                "screen_width": 600,
+                "screen_height": 600,
+                "centering_position": [0.5, 0.6],
+                "duration": 20,
+                "normalize_reward": False,
         }
     )
     return env
@@ -64,11 +59,11 @@ model = PPO(
 print("Starting PPO training...")
 
 
-TOTAL_TIMESTEPS = 500000 
+TOTAL_TIMESTEPS = 10000
 model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=4)
 
 # Save the trained model
-model.save("ppo_custom_roundabout_model_1.zip")
+model.save("ppo_custom_roundabout_model_2.zip")
 
 print(f"PPO training finished after {TOTAL_TIMESTEPS} timesteps.")
 print("PPO model saved successfully as ppo_custom_roundabout_model.zip.")

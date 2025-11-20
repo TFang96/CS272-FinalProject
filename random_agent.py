@@ -10,23 +10,28 @@ env = gym.make(
     render_mode="rgb_array",
     config={
         "observation": {
-            "type": "TimeToCollision"
-        },
-        "action": {
-            "type": "DiscreteMetaAction"
-        },
-        # ... (other config parameters) ...
-        "duration": 11,
-        "simulation_frequency": 15,
-        "policy_frequency": 1,
-        "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
-        "screen_width": 600,
-        "screen_height": 1000,
-        "centering_position": [0.5, 0.6],
-        "scaling": 5.5,
-        "show_trajectories": False,
-        "render_agent": True,
-        "offscreen_rendering": False
+                    "type": "Kinematics",
+                    "features_range": {
+                        "x": [-100, 100],
+                        "y": [-100, 100],
+                        "vx": [-15, 15],
+                        "vy": [-15, 15],
+                    },
+                },
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
+                "incoming_vehicle_destination": None,
+                "collision_reward": -1,
+                "high_speed_reward": 0.2,
+                "progress_reward": 0.1,
+                "pedestrian_proximity_reward": -0.05,
+                "right_lane_reward": 0,
+                "lane_change_reward": -0.05,
+                "screen_width": 600,
+                "screen_height": 600,
+                "centering_position": [0.5, 0.6],
+                "duration": 20,
+                "normalize_reward": False,
+            
     }
 )
 
