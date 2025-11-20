@@ -126,9 +126,9 @@ class CustomRoundaboutEnv(AbstractEnv):
         pedestrian_near_penalty = 0
         PEDESTRIAN_SAFE_DISTANCE = 5.0
         
-        for v in self.road.vehicles:
-            if isinstance(v, Pedestrian):
-                distance = np.linalg.norm(self.vehicle.position - v.position)
+        for o in self.road.objects:
+            if isinstance(o, Pedestrian):
+                distance = np.linalg.norm(self.vehicle.position - o.position)
                 
                 if distance < PEDESTRIAN_SAFE_DISTANCE:
                     pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
@@ -322,9 +322,9 @@ class CustomRoundaboutEnv(AbstractEnv):
             pos = lane.position(long, -lane.width / 2) 
             
             is_clear = True
-            for v in self.road.vehicles:
-                if isinstance(v, Pedestrian):
-                    distance = np.linalg.norm(pos - v.position)
+            for o in self.road.objects:
+                if isinstance(o, Pedestrian):
+                    distance = np.linalg.norm(pos - o.position)
                     if distance < 10.0:
                         is_clear = False
                         break
@@ -350,4 +350,4 @@ class CustomRoundaboutEnv(AbstractEnv):
             speed=0.7
         )
 
-        self.road.vehicles.append(ped)
+        self.road.objects.append(ped)
