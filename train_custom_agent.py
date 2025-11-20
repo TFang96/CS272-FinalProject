@@ -3,6 +3,8 @@ import gymnasium as gym
 import highway_env
 import register_envs # Ensure your custom environment is registered
 
+fileName = "ppo_custom_roundabout_model_2.zip"
+
 def create_env():
     """Creates and configures the custom roundabout environment."""
     env = gym.make(
@@ -63,7 +65,7 @@ TOTAL_TIMESTEPS = 10000
 model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=4)
 
 # Save the trained model
-model.save("ppo_custom_roundabout_model_2.zip")
+model.save(fileName)
 
 print(f"PPO training finished after {TOTAL_TIMESTEPS} timesteps.")
 print("PPO model saved successfully as ppo_custom_roundabout_model.zip.")

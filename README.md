@@ -3,6 +3,8 @@ Final Project - CS 272, Reinforcement Learning
 
 File explanation
 
+## Specify file name at the top of each file that requires it
+
 custom_roundabout.py: Our custom environment
 
 train_custom_agent.py: Trains an agent on the custom environment. Can set the amount of timesteps.

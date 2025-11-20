@@ -5,6 +5,8 @@ from stable_baselines3 import PPO
 import time
 import numpy as np 
 
+modelFile = "ppo_custom_roundabout_model_2.zip"
+
 env = gym.make(
         'custom-roundabout-v0',
         render_mode='rgb_array',
@@ -35,16 +37,15 @@ env = gym.make(
     )
 
 
-MODEL_PATH = "ppo_custom_roundabout_model_2.zip"
 try:
     model = PPO.load(
-        MODEL_PATH,
+        modelFile,
         env=env,
         device="auto", 
     )
     print("PPO model loaded successfully!")
 except Exception as e:
-    print(f"Error loading model from {MODEL_PATH}: {e}")
+    print(f"Error loading model from {modelFile}: {e}")
     print("Exiting script.")
     exit()
 
