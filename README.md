@@ -7,8 +7,10 @@ custom_roundabout.py: Our custom environment
 
 train_custom_agent.py: Trains an agent on the custom environment. Can set the amount of timesteps.
 - Currently set to use PPO
+- Saves to a specified file name (Make sure to check before running)
 
 continue_train_custom_agent.py: Takes an existing trained data set, and continues training it with more timesteps
+- Loads and saves to specified file names (Make sure to check before running)
 
 our_custom_agent.py: Visually runs a trained agent against the environment over 20 episodes. Loads a trained model from a given file name
 
