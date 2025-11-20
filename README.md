@@ -5,6 +5,8 @@ File explanation
 
 ## Specify file name at the top of each file that requires it
 
+## Zip and pkl files
+These are files that contain the learning data, which can be loaded at anytime. Used to persist learning between each run.
 ## custom_roundabout.py: 
 Our custom environment
 
