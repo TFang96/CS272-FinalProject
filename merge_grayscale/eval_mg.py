@@ -6,20 +6,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from stable_baselines3 import DQN
 
-OUTDIR = "highway_lidar"
+OUTDIR = "merge_grayscale"
 MODEL_PATH = f"{OUTDIR}/model.zip"
 N_EPISODES = 500
 
 def make_env():
     env = gym.make(
-        'highway-v0', 
+        'merge-v0', 
         render_mode=None, 
         config={
             "observation": {
-                "type": "LidarObservation",
-                "cells": 128,
-                "maximum_range": 64,
-                "normalise": True
+                "type": "GrayscaleObservation", 
+                "observation_shape": (84, 84), 
+                "stack_size": 4, 
+                "weights": [0.2989, 0.5870, 0.1140]
             }
         }
     )
@@ -50,7 +50,7 @@ def evaluate():
 def plot_violin(returns):
     plt.figure(figsize=(7,6))
     sns.violinplot(data=returns)
-    plt.title("Highway (Lidar) – 500 Episode Evaluation")
+    plt.title("Merge (Grayscale) – 500 Episode Evaluation")
     plt.ylabel("Episode Return")
     plt.savefig(f"{OUTDIR}/violin_plot.png")
     plt.close()

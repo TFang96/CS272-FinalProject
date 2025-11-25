@@ -5,12 +5,12 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 import os
 
-OUTDIR = "highway_lidar"
+OUTDIR = "merge_lidar"
 os.makedirs(OUTDIR, exist_ok=True)
 
 def make_env():
     env = gym.make(
-        'highway-v0', 
+        'merge-v0', 
         render_mode=None, 
         config={
             "observation": {
