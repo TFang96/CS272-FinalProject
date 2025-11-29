@@ -26,14 +26,23 @@ def make_env():
 def main():
     env = make_env()
     env = Monitor(env, f"{OUTDIR}/monitor.csv")
-
+    if torch.cuda.is_available():
+        device="cuda"
+    else:
+        print("No compatible GPU...")
+        device="cpu"
     model = DQN(
         policy="MlpPolicy",
         env=env,
+        target_update_interval=750, #reduce value overestimation
+        learning_rate=3e-4, # balances learning rate and stability
+        gamma=0.99, # driving requires planning -- closer to 1 to consider future rewards
+        buffer_size=100000, #large enough to have a diverse set of transitions
+        device=device,
         verbose=1
     )
 
-    model.learn(total_timesteps=10_000)
+    model.learn(total_timesteps=75_000)
     model.save(f"{OUTDIR}/model.zip")
 
     print("Training complete! Files saved to:", OUTDIR)
