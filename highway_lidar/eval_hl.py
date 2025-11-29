@@ -7,7 +7,7 @@ import seaborn as sns
 from stable_baselines3 import DQN
 
 OUTDIR = "highway_lidar"
-MODEL_PATH = f"{OUTDIR}/model.zip"
+MODEL_PATH = "model.zip"
 N_EPISODES = 500
 
 def make_env():
@@ -17,7 +17,7 @@ def make_env():
         config={
             "observation": {
                 "type": "LidarObservation",
-                "cells": 128,
+                "cells": 16,
                 "maximum_range": 64,
                 "normalise": True
             }
