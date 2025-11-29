@@ -1,7 +1,7 @@
 import gymnasium as gym
 import torch
 import highway_env
-from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
 import os
 
@@ -27,7 +27,7 @@ def main():
     env = make_env()
     env = Monitor(env, f"{OUTDIR}/monitor.csv")
 
-    model = DQN(
+    model = PPO(
         policy="MlpPolicy",
         env=env,
         verbose=1
