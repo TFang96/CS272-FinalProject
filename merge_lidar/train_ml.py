@@ -30,10 +30,15 @@ def main():
     model = DQN(
         policy="MlpPolicy",
         env=env,
+        target_update_interval=750,
+        learning_rate=3e-4,
+        gamma=0.99,
+        buffer_size=100000,
+        device="auto",
         verbose=1
     )
 
-    model.learn(total_timesteps=10_000)
+    model.learn(total_timesteps=60_000)
     model.save(f"{OUTDIR}/model.zip")
 
     print("Training complete! Files saved to:", OUTDIR)
