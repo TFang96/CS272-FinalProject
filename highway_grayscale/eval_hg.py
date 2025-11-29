@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from stable_baselines3 import DQN
+from sb3_contrib import QRDQN
 
 OUTDIR = "highway_grayscale"
 MODEL_PATH = f"{OUTDIR}/model.zip"
@@ -26,7 +27,8 @@ def make_env():
     return env
 
 def evaluate():
-    model = DQN.load(MODEL_PATH)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = QRDQN.load(MODEL_PATH, device=device)
     env = make_env()
 
     returns = []
