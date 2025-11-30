@@ -17,7 +17,7 @@ def make_env():
         config={
             "observation": {
                 "type": "LidarObservation",
-                "cells": 32,
+                "cells": 16,
                 "maximum_range": 64,
                 "normalise": True
             }
