@@ -2,12 +2,13 @@ import register_envs
 import gymnasium as gym
 import numpy as np
 from stable_baselines3 import DQN, PPO 
+from sb3_contrib import QRDQN
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.evaluation import evaluate_policy
 import highway_env
 import os # Import os for path checking
 
-modelFile = "ppo_custom_roundabout_model_2.zip" 
+modelFile = "custom_env_training/ppo_custom_env_normalized_reward_nov30_training_final.zip"
 
 def create_env():
     """

@@ -5,34 +5,33 @@ from stable_baselines3 import DQN, PPO
 import time
 import highway_env
 
-data_file = "ppo_custom_roundabout_model_2.zip"
+OUTDIR = "custom_env_training"
+MODEL_PATH = OUTDIR + "/ppo_custom_env_normalized_reward_nov30_training_2_final"
 
 env = gym.make(
-        'custom-roundabout-v0',
-        render_mode='rgb_array',
+        "custom-roundabout-v0",
+        render_mode="rgb_array",
         config={
-        "observation": {
+            "observation": {
                     "type": "Kinematics",
                     "features_range": {
-                        "x": [-100, 100],
-                        "y": [-100, 100],
-                        "vx": [-15, 15],
-                        "vy": [-15, 15],
+                        "x": [-100, 100], "y": [-100, 100], 
+                        "vx": [-15, 15], "vy": [-15, 15],
                     },
                 },
-        "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
-        "incoming_vehicle_destination": None,
-        "collision_reward": -3,
-        "high_speed_reward": 0.2,
-        "progress_reward": 0.1,
-        "pedestrian_proximity_reward": -0.05,
-        "right_lane_reward": 0,
-        "lane_change_reward": -0.05,
-        "screen_width": 600,
-        "screen_height": 600,
-        "centering_position": [0.5, 0.6],
-        "duration": 15,
-        "normalize_reward": False,
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
+                "incoming_vehicle_destination": None,
+                "collision_reward": -3,
+                "high_speed_reward": 0.2,
+                "progress_reward": 0.1,
+                "pedestrian_proximity_reward": -0.05,
+                "right_lane_reward": 0,
+                "lane_change_reward": -0.05,
+                "screen_width": 600,
+                "screen_height": 600,
+                "centering_position": [0.5, 0.6],
+                "duration": 20,
+                "normalize_reward": False,
         }
     )
 
@@ -42,7 +41,7 @@ PAUSE_TIME = 1 / SIM_FREQ
 
 
 model = PPO.load(
-    data_file,
+    MODEL_PATH,
     env=env,
     device="cuda",
 )
