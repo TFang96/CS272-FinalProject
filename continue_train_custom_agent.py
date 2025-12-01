@@ -9,12 +9,12 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 
 OUTDIR = "custom_env_training"
-MODEL_NAME = "ppo_custom_env_normalized_reward_nov30_training_2"
+MODEL_NAME = "ppo_custom_env"
 VEC_NORM_STATS_FILE = f"{OUTDIR}/vec_normalize_stats.pkl" 
 monitor_log_path = f"{OUTDIR}/monitor.csv"
 
-modelFile = f"{OUTDIR}/{MODEL_NAME}_final.zip" # Load the saved model file
-saveAs = f"{OUTDIR}/{MODEL_NAME}_final.zip"     
+modelFile = f"{OUTDIR}/{MODEL_NAME}_final" # Load the saved model file
+saveAs = f"{OUTDIR}/{MODEL_NAME}_final"     
 
 def create_env(monitor_path=None):
     """
@@ -25,27 +25,30 @@ def create_env(monitor_path=None):
         "custom-roundabout-v0",
         render_mode="rgb_array",
         config={
-            "observation": {
+                "observation": {
                     "type": "Kinematics",
                     "features_range": {
-                        "x": [-100, 100], "y": [-100, 100], 
-                        "vx": [-15, 15], "vy": [-15, 15],
+                        "x": [-100, 100],
+                        "y": [-100, 100],
+                        "vx": [-15, 15],
+                        "vy": [-15, 15],
                     },
                 },
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -3,
-                "high_speed_reward": 0.2,
-                "progress_reward": 0.1,
-                "pedestrian_proximity_reward": -0.05,
+                "collision_reward": -500,
+                "high_speed_reward": 0.5,
+                "progress_reward": 0.2,
+                "pedestrian_proximity_reward": 0.05,
                 "right_lane_reward": 0,
+                "time_penalty": -0.01,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 20, 
+                "duration": 20,
                 "normalize_reward": False,
-        }
+            }
     )
 
     env = Monitor(
@@ -81,7 +84,7 @@ except Exception as e:
     sys.exit(1)
 
 
-ADDITIONAL_TIMESTEPS = 50000
+ADDITIONAL_TIMESTEPS = 750000
 print(f"\nContinuing training for {ADDITIONAL_TIMESTEPS} more timesteps...")
 
 model.learn(

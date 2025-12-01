@@ -16,7 +16,7 @@ sys.path.insert(0, parent_dir)
 import register_envs
 
 OUTDIR = "custom_env_training"
-MODEL_PATH = "ppo_custom_env_normalized_reward_nov30_training_final"
+MODEL_PATH = "ppo_custom_env_final"
 N_EPISODES = 500
 
 def create_env():
@@ -25,7 +25,7 @@ def create_env():
         "custom-roundabout-v0",
         render_mode="rgb_array",
         config={
-            "observation": {
+                "observation": {
                     "type": "Kinematics",
                     "features_range": {
                         "x": [-100, 100],
@@ -36,18 +36,18 @@ def create_env():
                 },
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -3,
+                "collision_reward": -500,
                 "high_speed_reward": 0.2,
                 "progress_reward": 0.1,
-                "pedestrian_proximity_reward": -0.05,
+                "pedestrian_proximity_reward": 0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
                 "duration": 20,
-                "normalize_reward": True,
-        }
+                "normalize_reward": False,
+            }
     )
     return env
 

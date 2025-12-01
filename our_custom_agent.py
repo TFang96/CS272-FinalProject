@@ -6,7 +6,7 @@ import time
 import highway_env
 
 OUTDIR = "custom_env_training"
-MODEL_PATH = OUTDIR + "/ppo_custom_env_normalized_reward_nov30_training_2_final"
+MODEL_PATH = OUTDIR + "/trpo_custom_env_final"
 
 env = gym.make(
         "custom-roundabout-v0",

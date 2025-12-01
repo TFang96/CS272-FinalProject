@@ -9,7 +9,7 @@ env = gym.make(
     "custom-roundabout-v0",
     render_mode="rgb_array",
     config={
-        "observation": {
+                "observation": {
                     "type": "Kinematics",
                     "features_range": {
                         "x": [-100, 100],
@@ -22,8 +22,6 @@ env = gym.make(
                 "incoming_vehicle_destination": None,
                 "collision_reward": -1,
                 "high_speed_reward": 0.2,
-                "progress_reward": 0.1,
-                "pedestrian_proximity_reward": -0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
@@ -31,8 +29,7 @@ env = gym.make(
                 "centering_position": [0.5, 0.6],
                 "duration": 20,
                 "normalize_reward": False,
-            
-    }
+            }
 )
 
 SIM_FREQ = env.unwrapped.config["simulation_frequency"]

@@ -54,7 +54,7 @@ model = QRDQN("MlpPolicy", env, policy_kwargs=policy_kwargs, verbose=1)
 print("Starting training...")
 
 
-TOTAL_TIMESTEPS = 10000
+TOTAL_TIMESTEPS = 100000
 model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=1)
 
 # Save the trained model

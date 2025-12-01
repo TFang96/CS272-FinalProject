@@ -68,16 +68,14 @@ class CustomRoundaboutEnv(AbstractEnv):
                 },
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -3,
+                "collision_reward": -1,
                 "high_speed_reward": 0.2,
-                "progress_reward": 0.1,
-                "pedestrian_proximity_reward": -0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 15,
+                "duration": 20,
                 "normalize_reward": True,
             }
         )
@@ -113,32 +111,55 @@ class CustomRoundaboutEnv(AbstractEnv):
         reward *= rewards["on_road_reward"]
         return reward
 
-    def _rewards(self, action: int) -> dict[str, float]:
-        
-        current_lane = self.road.network.get_lane(self.vehicle.lane_index)
-        
-        longitudinal, _ = current_lane.local_coordinates(self.vehicle.position)
-        
-   
-        
-        progress_reward_value = longitudinal / 100.0 
+    # def _reward(self, action: int) -> float:
+    #     rewards_dict = self._rewards(action)
+    #     return sum(rewards_dict.values())
 
-        pedestrian_near_penalty = 0
-        PEDESTRIAN_SAFE_DISTANCE = 5.0
+    # def _rewards(self, action: int) -> dict[str, float]:
         
-        for v in self.road.vehicles:
-            if isinstance(v, Pedestrian):
-                distance = np.linalg.norm(self.vehicle.position - v.position)
+    #     current_lane = self.road.network.get_lane(self.vehicle.lane_index)
+        
+    #     longitudinal, _ = current_lane.local_coordinates(self.vehicle.position)
+        
+    #     progress_reward_value = longitudinal * 0.005
+        
+
+    #     pedestrian_near_penalty = 0
+    #     PEDESTRIAN_SAFE_DISTANCE = 5.0
+        
+    #     for v in self.road.vehicles:
+    #         if isinstance(v, Pedestrian):
+    #             distance = np.linalg.norm(self.vehicle.position - v.position)
                 
-                if distance < PEDESTRIAN_SAFE_DISTANCE:
-                    pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
-                    
+    #             if distance < PEDESTRIAN_SAFE_DISTANCE:
+    #                 pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
+        
+    #     rewards = {
+    #         "collision_reward": self.vehicle.crashed, 
+    #         "high_speed_reward": MDPVehicle.get_speed_index(self.vehicle)
+    #         / (MDPVehicle.DEFAULT_TARGET_SPEEDS.size - 1),
+    #         "on_road_reward": self.vehicle.on_road,
+    #         "lane_change_reward": action in [0, 2],
+    #     }
+
+    #     lane_change_penalty = 0
+    #     if action in [0, 2]: # Assuming 0 is LEFT and 2 is RIGHT
+    #         lane_change_penalty = self.config["lane_change_reward"]
+
+    #     return {
+    #         "collision_reward": rewards["collision_reward"] * self.config["collision_reward"], 
+    #         "high_speed_reward": rewards["high_speed_reward"] * self.config["high_speed_reward"],
+    #         # "progress_reward": rewards["progress_reward"] * self.config["progress_reward"],
+    #         # "pedestrian_proximity_reward": rewards["pedestrian_proximity_reward"] * self.config["pedestrian_proximity_reward"],
+    #         "lane_change_reward": lane_change_penalty, 
+    #         "on_road_reward": rewards["on_road_reward"] * self.config["right_lane_reward"]
+    #     }
+
+    def _rewards(self, action: int) -> dict[str, float]:
         return {
             "collision_reward": self.vehicle.crashed,
             "high_speed_reward": MDPVehicle.get_speed_index(self.vehicle)
             / (MDPVehicle.DEFAULT_TARGET_SPEEDS.size - 1),
-            "progress_reward": progress_reward_value,
-            "pedestrian_proximity_reward": -pedestrian_near_penalty, 
             "lane_change_reward": action in [0, 2],
             "on_road_reward": self.vehicle.on_road,
         }
@@ -347,7 +368,7 @@ class CustomRoundaboutEnv(AbstractEnv):
             road=self.road,
             position=pos,
             heading=heading,
-            speed=0.3
+            speed=0.7
         )
 
         self.road.vehicles.append(ped)
