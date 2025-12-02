@@ -16,7 +16,7 @@ sys.path.insert(0, parent_dir)
 import register_envs
 
 OUTDIR = "custom_env_training"
-MODEL_PATH = "ppo_custom_env_final"
+MODEL_PATH = "ppo_custom_env_simplified_final"
 N_EPISODES = 500
 
 def create_env():
@@ -36,17 +36,15 @@ def create_env():
                 },
                 "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -500,
+                "collision_reward": -1,
                 "high_speed_reward": 0.2,
-                "progress_reward": 0.1,
-                "pedestrian_proximity_reward": 0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
                 "duration": 20,
-                "normalize_reward": False,
+                "normalize_reward": True,
             }
     )
     return env

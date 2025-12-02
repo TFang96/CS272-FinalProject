@@ -8,11 +8,9 @@ from typing import Callable
 
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-# EvalCallback is removed
 from torch import nn 
 
-# --- Configuration & Paths ---
-MODEL_NAME = "ppo_custom_env_simplified" 
+MODEL_NAME = "ppo_custom_env" 
 OUTDIR = "custom_env_training"
 FILE_NAME_ZIP = f"{MODEL_NAME}.zip"
 
