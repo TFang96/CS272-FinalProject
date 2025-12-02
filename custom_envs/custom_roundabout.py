@@ -304,7 +304,7 @@ class CustomRoundaboutEnv(AbstractEnv):
 
                 #Other vehicles do not exit at the same exit as ego vehicle
                 #This is done to avoid other vehicles from crashing into the pedestrian
-                destinations = ["exr", "sxr", "nxr"]
+                destinations = ["exr", "sxr", "wxr"]
 
                 destination = self.np_random.choice(destinations)
                 vehicle.plan_route_to(destination)
@@ -326,9 +326,9 @@ class CustomRoundaboutEnv(AbstractEnv):
             # ("ees", "ee", 0), 
             # ("ex", "exs", 0), 
             # ("nes", "ne", 0), 
-            # ("nx", "nxs", 0), 
+            ("nx", "nxs", 0), #Only spawns in the exit that the ego vehicle goes to, to avoid other veghicles crashing
             # ("wes", "we", 0), 
-            ("wx", "wxs", 0)  #Only spawns in the exit that the ego vehicle goes to, to avoid other veghicles crashing
+            # ("wx", "wxs", 0)  
         ]
         
         if self.np_random.uniform() < SPAWN_PROBABILITY:
