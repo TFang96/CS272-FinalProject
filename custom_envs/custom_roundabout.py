@@ -66,7 +66,7 @@ class CustomRoundaboutEnv(AbstractEnv):
                         "vy": [-15, 15],
                     },
                 },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 8, 16]},
                 "incoming_vehicle_destination": None,
                 "collision_reward": -1,
                 "high_speed_reward": 0.2,
@@ -75,7 +75,7 @@ class CustomRoundaboutEnv(AbstractEnv):
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 20,
+                "duration": 11,
                 "normalize_reward": True,
             }
         )
@@ -234,7 +234,7 @@ class CustomRoundaboutEnv(AbstractEnv):
         ego_lane = self.road.network.get_lane(("ser","ses",0))
         ego_vehicle = self.action_type.vehicle_class(self.road, ego_lane.position(125.0,0.0), speed=8.0, heading=ego_lane.heading_at(140.0))
         try:
-            ego_vehicle.plan_route_to("wxs") 
+            ego_vehicle.plan_route_to("nxs") 
         except AttributeError:
             pass
         self.road.vehicles.append(ego_vehicle)

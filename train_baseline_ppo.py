@@ -22,28 +22,6 @@ def create_env(monitor_path=None):
     env = gym.make(
         "custom-roundabout-v0",
         render_mode="rgb_array",
-        config={
-                "observation": {
-                    "type": "Kinematics",
-                    "features_range": {
-                        "x": [-100, 100],
-                        "y": [-100, 100],
-                        "vx": [-15, 15],
-                        "vy": [-15, 15],
-                    },
-                },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
-                "incoming_vehicle_destination": None,
-                "collision_reward": -1,
-                "high_speed_reward": 0.2,
-                "right_lane_reward": 0,
-                "lane_change_reward": -0.05,
-                "screen_width": 600,
-                "screen_height": 600,
-                "centering_position": [0.5, 0.6],
-                "duration": 20,
-                "normalize_reward": True,
-            }
     )
     if monitor_path:
         env = Monitor(env, monitor_path) 
