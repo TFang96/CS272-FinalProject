@@ -91,8 +91,8 @@ class CustomRoundaboutEnv(AbstractEnv):
         # Increment step count
         self.step_count += 1
         
-        # Attempt to spawn a pedestrian at random times, only after the 3rd step
-        if self.step_count >= 3:
+        # Attempt to spawn a pedestrian at random times, only after the 2nd step
+        if self.step_count >= 2:
             self._maybe_spawn_pedestrian()
         
         return obs, reward, terminated, truncated, info
