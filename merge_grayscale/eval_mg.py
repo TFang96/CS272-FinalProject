@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from stable_baselines3 import DQN
+from stable_baselines3 import PPO
+from sb3_contrib import QRDQN
 
 OUTDIR = "merge_grayscale"
 MODEL_PATH = f"{OUTDIR}/model.zip"
@@ -26,7 +28,7 @@ def make_env():
     return env
 
 def evaluate():
-    model = DQN.load(MODEL_PATH)
+    model = PPO.load(MODEL_PATH)
     env = make_env()
 
     returns = []
