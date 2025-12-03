@@ -36,14 +36,28 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
         step_count = 0
         total_reward = 0
         
+        # print(f"{'Step':<5} | {'Total Reward':<12} | {'Collision (-1)':<15} | {'High Speed (0.2)':<16} | {'Progress (0.5)':<16} | {'Lane Change (-0.05)':<20} | {'Time Penalty (-0.1)':<20}")
+        # print("-" * 88)
+
         while not done:
             action = env.action_space.sample()
+            action = 3
             
             obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
             total_reward += reward
             step_count += 1
-            
+
+
+            reward_breakdown = info.get("rewards", {})
+            print(
+                f"{step_count:<5} Action: {action} | {reward:.4f}     | "
+                f"{reward_breakdown.get('collision_reward', 0):<10.4f} | "
+                f"{reward_breakdown.get('high_speed_reward', 0):<12.4f} | "
+                f"{reward_breakdown.get('lane_change_reward', 0):<12.4f}"
+                f"{reward_breakdown.get('time_penalty', 0):<12.4f}"
+            )
+
             im.set_data(env.render())
             fig.canvas.draw()
             fig.canvas.flush_events()

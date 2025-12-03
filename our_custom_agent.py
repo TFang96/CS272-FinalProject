@@ -6,33 +6,11 @@ import time
 import highway_env
 
 OUTDIR = "custom_env_training"
-MODEL_PATH = OUTDIR + "/ppo_custom_env_simplified_final"
+MODEL_PATH = OUTDIR + "/ppo_baseline_custom_env_final"
 
 env = gym.make(
         "custom-roundabout-v0",
         render_mode="rgb_array",
-        config={
-                "observation": {
-                    "type": "Kinematics",
-                    "features_range": {
-                        "x": [-100, 100],
-                        "y": [-100, 100],
-                        "vx": [-15, 15],
-                        "vy": [-15, 15],
-                    },
-                },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
-                "incoming_vehicle_destination": None,
-                "collision_reward": -1,
-                "high_speed_reward": 0.2,
-                "right_lane_reward": 0,
-                "lane_change_reward": -0.05,
-                "screen_width": 600,
-                "screen_height": 600,
-                "centering_position": [0.5, 0.6],
-                "duration": 20,
-                "normalize_reward": True,
-            }
     )
 
 SIM_FREQ = env.unwrapped.config["simulation_frequency"]
@@ -46,10 +24,9 @@ model = PPO.load(
     device="cuda",
 )
 
-print("PPO model loaded successfully!")
+print("model loaded successfully!")
 
 def visualize_agent_performance_on_input(model, env, num_episodes=3):
-    """Runs and displays multiple episodes of the trained agent, waiting for user input between episodes."""
 
     plt.ion() 
     
@@ -71,14 +48,25 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
         step_count = 0
         total_reward = 0
         
+        # print(f"{'Step':<5} | {'Total Reward':<12} | {'Collision (-1)':<15} | {'High Speed (0.2)':<16} | {'Progress (0.5)':<16} | {'Lane Change (-0.05)':<20} | {'Time Penalty (-0.1)':<20}")
+        # print("-" * 88)
+
         while not done:
             action, _ = model.predict(obs, deterministic=True)
-            
+            print(f"Action chosen: {action}")
             obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
             total_reward += reward
             step_count += 1
             
+            # reward_breakdown = info.get("rewards", {})
+            # print(
+            #     f"{step_count:<5} Action: {action} | {reward:.4f}     | "
+            #     f"{reward_breakdown.get('collision_reward', 0):<10.4f} | "
+            #     f"{reward_breakdown.get('high_speed_reward', 0):<12.4f} | "
+            #     f"{reward_breakdown.get('lane_change_reward', 0):<12.4f}"
+            # )
+
             im.set_data(env.render())
             fig.canvas.draw()
             fig.canvas.flush_events()

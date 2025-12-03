@@ -66,17 +66,19 @@ class CustomRoundaboutEnv(AbstractEnv):
                         "vy": [-15, 15],
                     },
                 },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 8, 16]},
+                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
                 "incoming_vehicle_destination": None,
-                "collision_reward": -1,
+                "collision_reward": -3,
                 "high_speed_reward": 0.2,
+                "progress_reward": 0.1,
+                "pedestrian_proximity_reward": -0.05,
                 "right_lane_reward": 0,
                 "lane_change_reward": -0.05,
                 "screen_width": 600,
                 "screen_height": 600,
                 "centering_position": [0.5, 0.6],
-                "duration": 11,
-                "normalize_reward": True,
+                "duration": 15,
+                "normalize_reward": False,
             }
         )
         return config
@@ -91,8 +93,8 @@ class CustomRoundaboutEnv(AbstractEnv):
         # Increment step count
         self.step_count += 1
         
-        # Attempt to spawn a pedestrian at random times, only after the 2nd step
-        if self.step_count >= 2:
+        # Attempt to spawn a pedestrian at random times, only after the 3rd step
+        if self.step_count >= 3:
             self._maybe_spawn_pedestrian()
         
         return obs, reward, terminated, truncated, info
@@ -111,55 +113,32 @@ class CustomRoundaboutEnv(AbstractEnv):
         reward *= rewards["on_road_reward"]
         return reward
 
-    # def _reward(self, action: int) -> float:
-    #     rewards_dict = self._rewards(action)
-    #     return sum(rewards_dict.values())
-
-    # def _rewards(self, action: int) -> dict[str, float]:
-        
-    #     current_lane = self.road.network.get_lane(self.vehicle.lane_index)
-        
-    #     longitudinal, _ = current_lane.local_coordinates(self.vehicle.position)
-        
-    #     progress_reward_value = longitudinal * 0.005
-        
-
-    #     pedestrian_near_penalty = 0
-    #     PEDESTRIAN_SAFE_DISTANCE = 5.0
-        
-    #     for v in self.road.vehicles:
-    #         if isinstance(v, Pedestrian):
-    #             distance = np.linalg.norm(self.vehicle.position - v.position)
-                
-    #             if distance < PEDESTRIAN_SAFE_DISTANCE:
-    #                 pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
-        
-    #     rewards = {
-    #         "collision_reward": self.vehicle.crashed, 
-    #         "high_speed_reward": MDPVehicle.get_speed_index(self.vehicle)
-    #         / (MDPVehicle.DEFAULT_TARGET_SPEEDS.size - 1),
-    #         "on_road_reward": self.vehicle.on_road,
-    #         "lane_change_reward": action in [0, 2],
-    #     }
-
-    #     lane_change_penalty = 0
-    #     if action in [0, 2]: # Assuming 0 is LEFT and 2 is RIGHT
-    #         lane_change_penalty = self.config["lane_change_reward"]
-
-    #     return {
-    #         "collision_reward": rewards["collision_reward"] * self.config["collision_reward"], 
-    #         "high_speed_reward": rewards["high_speed_reward"] * self.config["high_speed_reward"],
-    #         # "progress_reward": rewards["progress_reward"] * self.config["progress_reward"],
-    #         # "pedestrian_proximity_reward": rewards["pedestrian_proximity_reward"] * self.config["pedestrian_proximity_reward"],
-    #         "lane_change_reward": lane_change_penalty, 
-    #         "on_road_reward": rewards["on_road_reward"] * self.config["right_lane_reward"]
-    #     }
-
     def _rewards(self, action: int) -> dict[str, float]:
+        
+        current_lane = self.road.network.get_lane(self.vehicle.lane_index)
+        
+        longitudinal, _ = current_lane.local_coordinates(self.vehicle.position)
+        
+   
+        
+        progress_reward_value = longitudinal / 100.0 
+
+        pedestrian_near_penalty = 0
+        PEDESTRIAN_SAFE_DISTANCE = 5.0
+        
+        for v in self.road.vehicles:
+            if isinstance(v, Pedestrian):
+                distance = np.linalg.norm(self.vehicle.position - v.position)
+                
+                if distance < PEDESTRIAN_SAFE_DISTANCE:
+                    pedestrian_near_penalty += (1 - distance / PEDESTRIAN_SAFE_DISTANCE)
+                    
         return {
             "collision_reward": self.vehicle.crashed,
             "high_speed_reward": MDPVehicle.get_speed_index(self.vehicle)
             / (MDPVehicle.DEFAULT_TARGET_SPEEDS.size - 1),
+            "progress_reward": progress_reward_value,
+            "pedestrian_proximity_reward": -pedestrian_near_penalty, 
             "lane_change_reward": action in [0, 2],
             "on_road_reward": self.vehicle.on_road,
         }
@@ -234,7 +213,7 @@ class CustomRoundaboutEnv(AbstractEnv):
         ego_lane = self.road.network.get_lane(("ser","ses",0))
         ego_vehicle = self.action_type.vehicle_class(self.road, ego_lane.position(125.0,0.0), speed=8.0, heading=ego_lane.heading_at(140.0))
         try:
-            ego_vehicle.plan_route_to("nxs") 
+            ego_vehicle.plan_route_to("wxs") 
         except AttributeError:
             pass
         self.road.vehicles.append(ego_vehicle)
@@ -304,7 +283,7 @@ class CustomRoundaboutEnv(AbstractEnv):
 
                 #Other vehicles do not exit at the same exit as ego vehicle
                 #This is done to avoid other vehicles from crashing into the pedestrian
-                destinations = ["exr", "sxr", "wxr"]
+                destinations = ["exr", "sxr", "nxr"]
 
                 destination = self.np_random.choice(destinations)
                 vehicle.plan_route_to(destination)
@@ -326,9 +305,9 @@ class CustomRoundaboutEnv(AbstractEnv):
             # ("ees", "ee", 0), 
             # ("ex", "exs", 0), 
             # ("nes", "ne", 0), 
-            ("nx", "nxs", 0), #Only spawns in the exit that the ego vehicle goes to, to avoid other veghicles crashing
+            # ("nx", "nxs", 0), 
             # ("wes", "we", 0), 
-            # ("wx", "wxs", 0)  
+            ("wx", "wxs", 0)  #Only spawns in the exit that the ego vehicle goes to, to avoid other veghicles crashing
         ]
         
         if self.np_random.uniform() < SPAWN_PROBABILITY:
@@ -368,7 +347,7 @@ class CustomRoundaboutEnv(AbstractEnv):
             road=self.road,
             position=pos,
             heading=heading,
-            speed=0.7
+            speed=0.3
         )
 
         self.road.vehicles.append(ped)
