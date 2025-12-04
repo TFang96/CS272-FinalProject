@@ -52,13 +52,13 @@ def main():
         "vehicles_count": 1,
         # maybe no pedestrians here if they exist
     })
-    model.learn(total_timesteps=20_000, reset_num_timesteps=True)
+    model.learn(total_timesteps=60_000, reset_num_timesteps=True)
 
     # Stage 2: harder intersection
     env.unwrapped.config.update({
         "vehicles_count": 5,
     })
-    model.learn(total_timesteps=30_000, reset_num_timesteps=False)
+    model.learn(total_timesteps=60_000, reset_num_timesteps=False)
     model.save(f"{OUTDIR}/model.zip")
 
     print("Training complete! Files saved to:", OUTDIR)
