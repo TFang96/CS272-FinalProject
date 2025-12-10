@@ -1,9 +1,15 @@
 from stable_baselines3 import PPO
+from sb3_contrib import QRDQN
 import gymnasium as gym
 import highway_env
-import register_envs # Ensure your custom environment is registered
+import register_envs 
+import os
+from stable_baselines3.common.monitor import Monitor
 
-fileName = "ppo_custom_roundabout_model_2.zip"
+fileName = "qrdqn_custom_env_normalized_reward_nov30_training.zip"
+
+OUTDIR = "custom_env_training"
+os.makedirs(OUTDIR, exist_ok=True)
 
 def create_env():
     """Creates and configures the custom roundabout environment."""
@@ -40,34 +46,20 @@ def create_env():
 # Create the environment instance
 env = create_env()
 
-
-model = PPO(
-    "MlpPolicy",
-    env,
-    verbose=1,
-    learning_rate=3e-4, # Standard and stable PPO learning rate
-    n_steps=1024,       # Collect 2048 steps before performing an update
-    batch_size=64,
-    gamma=0.99,
-    gae_lambda=0.95,
-
-    n_epochs=20,         
-    vf_coef=1.0,         
-    clip_range_vf=0.2,
-
-    device="auto",      # Use CUDA if available
-)
-
-print("Starting PPO training...")
+env = Monitor(env, f"{OUTDIR}/monitor.csv")
 
 
-TOTAL_TIMESTEPS = 10000
-model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=4)
+policy_kwargs = dict(n_quantiles=50)
+model = QRDQN("MlpPolicy", env, policy_kwargs=policy_kwargs, verbose=1)
+print("Starting training...")
+
+
+TOTAL_TIMESTEPS = 100000
+model.learn(total_timesteps=TOTAL_TIMESTEPS, log_interval=1)
 
 # Save the trained model
-model.save(fileName)
-
+model.save(f"{OUTDIR}/{fileName}")
 print(f"PPO training finished after {TOTAL_TIMESTEPS} timesteps.")
-print("PPO model saved successfully as ppo_custom_roundabout_model.zip.")
+print(f"PPO model saved successfully as {fileName}")
 
 env.close()
