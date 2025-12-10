@@ -21,10 +21,9 @@ PHASE3_TIMESTEPS = 150000
 TOTAL_TIMESTEPS = PHASE1_TIMESTEPS + PHASE2_TIMESTEPS + PHASE3_TIMESTEPS # 750k total
 
 LR_PHASE1 = 5e-4 # Highest LR for initial exploration
-LR_PHASE2 = 3e-4 # Medium LR for core learning (3e-4 is the SB3 default)
+LR_PHASE2 = 3e-4 # Medium LR for core learning
 LR_PHASE3 = 1e-4 # Lowest LR for stable fine-tuning
 
-# Ensure directory exists
 os.makedirs(OUTDIR, exist_ok=True)
 
 def three_phase_schedule(p1_steps: int, p2_steps: int, lr1: float, lr2: float, lr3: float) -> Callable[[float], float]:
@@ -34,7 +33,7 @@ def three_phase_schedule(p1_steps: int, p2_steps: int, lr1: float, lr2: float, l
         
         timesteps_completed = progress_completed * TOTAL_TIMESTEPS
         
-        # Define the cumulative boundaries
+        # Define the boundaries
         boundary_1 = p1_steps
         boundary_2 = p1_steps + p2_steps
         
@@ -48,7 +47,6 @@ def three_phase_schedule(p1_steps: int, p2_steps: int, lr1: float, lr2: float, l
     return func
 
 def create_env(monitor_path=None):
-    """Creates and configures the custom roundabout environment."""
     env = gym.make(
         "custom-roundabout-v0",
         render_mode="rgb_array",
@@ -70,14 +68,11 @@ PPO_HYPERPARAMS = dict(
     batch_size=512,
 )
 
-# --- Main Execution ---
 if __name__ == "__main__":
     
-    # 1. Setup Environment
     train_env = DummyVecEnv([lambda: create_env(monitor_path=f"{OUTDIR}/monitor.csv")])
     train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True, clip_obs=10.)
 
-    # 2. Setup Model
     model = PPO(
         "MlpPolicy", 
         train_env,
@@ -92,7 +87,6 @@ if __name__ == "__main__":
     print(f"Total training duration: {TOTAL_TIMESTEPS} timesteps.")
 
 
-    # 3. Training Loop with Interruption Handling
     try:
         model.learn(
             total_timesteps=TOTAL_TIMESTEPS,
@@ -101,23 +95,21 @@ if __name__ == "__main__":
         print("\nTraining completed successfully without interruption.")
 
     except KeyboardInterrupt:
-        print("\n\n--- Training interrupted by user (Ctrl+C). Saving model and stats... ---")
+        print("\n\nTraining interrupted by user. Saving model and stats")
 
     except Exception as e:
-        print(f"\n\n--- An unexpected error occurred: {e}. Saving model and stats... ---")
+        print(f"\n\nAn unexpected error occurred: {e}. Saving model and stats")
     
-    # 4. Save Logic
     model_save_path = f"{OUTDIR}/{FILE_NAME_ZIP}"
     stats_save_path = VEC_NORM_STATS_FILE
 
-    print(f"Saving model to {model_save_path}...")
+    print(f"Saving model to {model_save_path}")
     model.save(model_save_path)
     
-    print(f"Saving VecNormalize stats to {stats_save_path}...")
+    print(f"Saving VecNormalize stats to {stats_save_path}")
     train_env.save(stats_save_path) 
 
     print(f"\nTraining finished after {model.num_timesteps} timesteps.")
     print(f"Final model saved as {FILE_NAME_ZIP}.")
 
-    # 5. Close the environment
     train_env.close()

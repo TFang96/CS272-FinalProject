@@ -33,9 +33,9 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
     for episode in range(num_episodes):
         
         if episode > 0:
-            input("Press Enter to start the next episode...") 
+            input("Press Enter to start the next episode") 
             
-        print(f"\n--- Running Episode {episode + 1}/{num_episodes} ---")
+        print(f"\nRunning Episode {episode + 1}/{num_episodes}")
         
         obs, info = env.reset()
         
@@ -47,9 +47,6 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
         done = False
         step_count = 0
         total_reward = 0
-        
-        # print(f"{'Step':<5} | {'Total Reward':<12} | {'Collision (-1)':<15} | {'High Speed (0.2)':<16} | {'Progress (0.5)':<16} | {'Lane Change (-0.05)':<20} | {'Time Penalty (-0.1)':<20}")
-        # print("-" * 88)
 
         while not done:
             action, _ = model.predict(obs, deterministic=True)
@@ -59,13 +56,6 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
             total_reward += reward
             step_count += 1
             
-            # reward_breakdown = info.get("rewards", {})
-            # print(
-            #     f"{step_count:<5} Action: {action} | {reward:.4f}     | "
-            #     f"{reward_breakdown.get('collision_reward', 0):<10.4f} | "
-            #     f"{reward_breakdown.get('high_speed_reward', 0):<12.4f} | "
-            #     f"{reward_breakdown.get('lane_change_reward', 0):<12.4f}"
-            # )
 
             im.set_data(env.render())
             fig.canvas.draw()

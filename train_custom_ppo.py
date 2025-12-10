@@ -24,32 +24,9 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 
 def create_env(monitor_path=None):
-    """Creates and configures the custom roundabout environment."""
     env = gym.make(
         "custom-roundabout-v0",
         render_mode="rgb_array",
-        config={
-                "observation": {
-                    "type": "Kinematics",
-                    "features_range": {
-                        "x": [-100, 100],
-                        "y": [-100, 100],
-                        "vx": [-15, 15],
-                        "vy": [-15, 15],
-                    },
-                },
-                "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
-                "incoming_vehicle_destination": None,
-                "collision_reward": -1,
-                "high_speed_reward": 0.2,
-                "right_lane_reward": 0,
-                "lane_change_reward": -0.05,
-                "screen_width": 600,
-                "screen_height": 600,
-                "centering_position": [0.5, 0.6],
-                "duration": 20,
-                "normalize_reward": True,
-            }
     )
     if monitor_path:
         env = Monitor(env, monitor_path) 
@@ -62,10 +39,9 @@ train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True, clip_obs=10
 
 policy_kwargs = dict(
     activation_fn=nn.Tanh,
-    net_arch=dict(pi=[256, 256], vf=[256, 256]) # Two layers of 256 neurons for Actor (pi) and Critic (vf)
+    net_arch=dict(pi=[256, 256], vf=[256, 256])
 )
 
-# PPO Hyperparameters 
 PPO_HYPERPARAMS = dict(
     learning_rate=linear_schedule(3e-4), 
     n_steps=8196,                     

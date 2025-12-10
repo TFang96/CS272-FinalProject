@@ -10,30 +10,6 @@ modelFile = "ppo_custom_roundabout_model_2.zip"
 env = gym.make(
         'custom-roundabout-v0',
         render_mode='rgb_array',
-        config={
-        "observation": {
-                    "type": "Kinematics",
-                    "features_range": {
-                        "x": [-100, 100],
-                        "y": [-100, 100],
-                        "vx": [-15, 15],
-                        "vy": [-15, 15],
-                    },
-                },
-        "action": {"type": "DiscreteMetaAction", "target_speeds": [0, 5, 10, 15, 20]},
-        "incoming_vehicle_destination": None,
-        "collision_reward": -3,
-        "high_speed_reward": 0.2,
-        "progress_reward": 0.1,
-        "pedestrian_proximity_reward": -0.05,
-        "right_lane_reward": 0,
-        "lane_change_reward": -0.05,
-        "screen_width": 600,
-        "screen_height": 600,
-        "centering_position": [0.5, 0.6],
-        "duration": 15,
-        "normalize_reward": False,
-        }
     )
 
 
@@ -43,27 +19,22 @@ try:
         env=env,
         device="auto", 
     )
-    print("PPO model loaded successfully!")
+    print("model loaded successfully!")
 except Exception as e:
     print(f"Error loading model from {modelFile}: {e}")
     print("Exiting script.")
     exit()
 
 def visualize_agent_performance_on_input(model, env, num_episodes=3):
-    """
-    Runs and displays multiple episodes of the trained agent, waiting for user 
-    input between each individual step for detailed analysis.
-    """
 
-    plt.ion() # Turn on interactive mode for real-time plotting
+    plt.ion()
     
     for episode in range(num_episodes):
         
-        print(f"\n--- Starting Episode {episode + 1}/{num_episodes} ---")
+        print(f"\nStarting Episode {episode + 1}/{num_episodes}")
         
         obs, info = env.reset()
         
-        # Set up the plot for the new episode
         fig, ax = plt.subplots()
         im = ax.imshow(env.render())
         
@@ -73,7 +44,6 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
         step_count = 0
         total_reward = 0
         
-        # Display initial frame
         ax.set_title(f"Episode {episode + 1}, Step 0, Total Reward: {total_reward:.2f}")
         plt.show()
 
@@ -83,7 +53,7 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
             user_input = input(prompt)
             
             if user_input.lower() == 'q':
-                print("Episode manually terminated by user.")
+                print("Episode terminated by user.")
                 break
 
             action, _ = model.predict(obs, deterministic=True)
@@ -102,7 +72,7 @@ def visualize_agent_performance_on_input(model, env, num_episodes=3):
         print(f"Episode finished after {step_count} steps. Final Reward: {total_reward:.2f}")
         
         time.sleep(1) 
-        plt.close(fig) # Close the plot for this episode
+        plt.close(fig)
 
     plt.ioff() 
     print("Visualization complete.")

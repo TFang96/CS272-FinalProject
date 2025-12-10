@@ -6,15 +6,11 @@ from sb3_contrib import QRDQN
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.evaluation import evaluate_policy
 import highway_env
-import os # Import os for path checking
+import os 
 
 modelFile = "custom_env_training/ppo_custom_env_normalized_reward_nov30_training_final.zip"
 
 def create_env():
-    """
-    Creates and configures the custom roundabout environment.
-    NOTE: The config MUST match the one used during training in train_ppo.py.
-    """
     env = gym.make(
         'custom-roundabout-v0',
         render_mode='rgb_array',
@@ -54,7 +50,7 @@ def test_api_compliance(env):
         raise
 
 def test_learnability(env, total_timesteps=1):
-    print(f"\n--- Starting Learnability Test ---")
+    print(f"\nStarting Learnability Test")
     n_eval_episodes = 100
     
     #Evaluate random policy
@@ -67,21 +63,20 @@ def test_learnability(env, total_timesteps=1):
     std_reward = 0.0
 
     if not os.path.exists(modelFile):
-        print(f"\nSkipping PPO evaluation: Model file '{modelFile}' not found.")
+        print(f"\nSkipping evaluation: Model file '{modelFile}' not found.")
         print(f"Please ensure the trained model is available for comparison.")
         return
         
     try:
-        # Load model
         model = PPO.load( 
             modelFile,
             env=env,
             device="cuda"
         )
 
-        print("PPO model loaded successfully!")
+        print("model loaded successfully")
 
-        print("\nEvaluating Trained PPO Policy...")
+        print("\nEvaluating Trained Policy")
         ppo_rewards = []
         
         for _ in range(n_eval_episodes):
@@ -97,7 +92,7 @@ def test_learnability(env, total_timesteps=1):
                 episode_reward += reward
                 
             ppo_rewards.append(episode_reward)
-            # Since _is_terminated is defined as vehicle crash in the custom env
+            # _is_terminated is defined as vehicle crash
             if terminated:
                 ppo_crashes += 1
                 
@@ -116,25 +111,20 @@ def test_learnability(env, total_timesteps=1):
     except Exception as e:
         print(f"Could not load or evaluate model: {e}")
     
-    print(f"\n--- Crash Analysis (N={n_eval_episodes} episodes) ---")
+    print(f"\nCrash Analysis (N={n_eval_episodes} episodes)")
     
     print(f"Random Policy (Crashes/Total Episodes): {random_crashes} / {n_eval_episodes}")
     
     #Only if model was loaded
     if os.path.exists(modelFile):
-        print(f"PPO Policy (Crashes/Total Episodes): {ppo_crashes} / {n_eval_episodes}")
+        print(f"Policy (Crashes/Total Episodes): {ppo_crashes} / {n_eval_episodes}")
         
 def evaluate_random_policy(env, n_eval_episodes=100, render=False):
-    """
-    Evaluates a random agent over n_eval_episodes.
-    Returns the mean reward, standard deviation, and number of crashed episodes.
-    """
-    print("Evaluating Random Policy...")
+    print("Evaluating Random Policy")
     all_episode_rewards = []
     num_crashes = 0
     
     for episode in range(n_eval_episodes):
-        # Must reset the environment after each episode
         obs, info = env.reset() 
         terminated = False
         truncated = False
@@ -150,7 +140,7 @@ def evaluate_random_policy(env, n_eval_episodes=100, render=False):
                 env.render()
         
         all_episode_rewards.append(episode_reward)
-        # Assuming terminated means a crash in the custom environment
+        # Assuming terminated means a crash
         if terminated:
              num_crashes += 1
 

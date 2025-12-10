@@ -16,8 +16,8 @@ sys.path.insert(0, parent_dir)
 import register_envs
 
 OUTDIR = "custom_env_training"
-MODEL_PATH = "ppo_baseline_custom_env_final"
-N_EPISODES = 500
+MODEL_PATH = "ppo_custom_env_final"
+N_EPISODES = 1000
 
 def create_env():
     """Creates and configures the custom roundabout environment."""
@@ -52,7 +52,7 @@ def evaluate():
 def plot_violin(returns):
     plt.figure(figsize=(7,6))
     sns.violinplot(data=returns)
-    plt.title("Custom Env – 500 Episode Evaluation")
+    plt.title("Custom Env – 1000 Episode Evaluation")
     plt.ylabel("Episode Return")
     plt.savefig("violin_plot.png")
     plt.close()
