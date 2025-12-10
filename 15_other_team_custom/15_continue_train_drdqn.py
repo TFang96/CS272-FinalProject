@@ -18,7 +18,6 @@ ADDITIONAL_TIMESTEPS = 150000
 NEW_LEARNING_RATE = 1e-4
 
 def create_env():
-    """Creates the highway-construction environment with monitor for logging."""
     env = gym.make(
         "highway-construction-v0",
         render_mode="rgb_array",
@@ -45,7 +44,7 @@ if __name__ == "__main__":
         print(f"CRITICAL ERROR: VecNormalize stats file not found at {VEC_NORM_STATS_FILE}. Exiting.")
         sys.exit(1)
 
-    print(f"Loading existing model from {modelFile}...")
+    print(f"Loading existing model from {modelFile}")
     try:
         model = QRDQN.load(modelFile, env=env, device="auto", custom_objects=None)
         print("Model loaded successfully. training")
